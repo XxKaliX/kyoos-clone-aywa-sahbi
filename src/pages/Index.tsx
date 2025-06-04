@@ -4,6 +4,7 @@ import Hero from '../components/Hero';
 import Features from '../components/Features';
 import Pricing from '../components/Pricing';
 import Footer from '../components/Footer';
+import UserSupportChat from '../components/UserSupportChat';
 
 const Index = () => {
   return (
@@ -13,6 +14,7 @@ const Index = () => {
       <Features />
       <Pricing />
       <Footer />
+      <UserSupportChat />
     </div>
   );
 };

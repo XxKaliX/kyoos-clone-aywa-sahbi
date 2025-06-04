@@ -30,8 +30,6 @@ const translations = {
     enter_email: 'أدخل البريد الإلكتروني',
     enter_password: 'أدخل كلمة المرور',
     enter_name: 'أدخل الاسم',
-    
-    // Auth Messages
     logging_in: 'جارٍ تسجيل الدخول...',
     creating_account: 'جارٍ إنشاء الحساب...',
     login_success: 'نجح تسجيل الدخول',
@@ -69,6 +67,10 @@ const translations = {
     packages: 'الباقات',
     users: 'المستخدمين',
     support_chat: 'دعم فني',
+    conversations: 'المحادثات',
+    products: 'المنتجات',
+    downloads: 'التحميلات',
+    support: 'الدعم',
     
     // Hero Section
     hero_title: 'أدوات متقدمة للأمن السيبراني',
@@ -79,6 +81,28 @@ const translations = {
     // Features
     features_title: 'ميزات متقدمة',
     features_subtitle: 'أدوات متخصصة للمحترفين',
+    feature_1_title: 'أدوات اختبار الاختراق',
+    feature_1_desc: 'مجموعة شاملة من أدوات اختبار الاختراق المتقدمة',
+    feature_2_title: 'أمان متقدم',
+    feature_2_desc: 'حلول أمان متطورة لحماية البيانات والأنظمة',
+    feature_3_title: 'تحليلات متقدمة',
+    feature_3_desc: 'أدوات تحليل وتقييم الثغرات الأمنية',
+    
+    // Pricing
+    pricing_title: 'خطط الاشتراك',
+    pricing_subtitle: 'اختر الخطة المناسبة لك',
+    basic_plan: 'الخطة الأساسية',
+    gold_plan: 'الخطة الذهبية',
+    diamond_plan: 'الخطة الماسية',
+    month: 'شهر',
+    choose_plan: 'اختر هذه الخطة',
+    
+    // Support Chat
+    support_chat_title: 'الدعم الفني',
+    send_message: 'إرسال رسالة',
+    type_message: 'اكتب رسالتك...',
+    chat_with_support: 'تحدث مع فريق الدعم',
+    online_support: 'الدعم متاح الآن',
     
     // Footer
     quick_links: 'روابط سريعة',
@@ -110,21 +134,15 @@ const translations = {
     pricing: 'Pricing',
     about: 'About',
     contact: 'Contact',
-    
-    // Authentication
     login: 'Login',
     register: 'Register',
     logout: 'Logout',
     email: 'Email',
     password: 'Password',
     name: 'Name',
-    
-    // Placeholders
     enter_email: 'Enter email',
     enter_password: 'Enter password',
     enter_name: 'Enter name',
-    
-    // Auth Messages
     logging_in: 'Logging in...',
     creating_account: 'Creating account...',
     login_success: 'Login successful',
@@ -137,8 +155,6 @@ const translations = {
     no_account: "Don't have an account?",
     have_account: 'Already have an account?',
     create_account: 'Create new account',
-    
-    // Email Verification
     verify_email: 'Verify Email',
     verification_code: 'Verification Code',
     verification_code_sent_to: 'Verification code sent to',
@@ -156,29 +172,41 @@ const translations = {
     new_verification_code: 'New verification code:',
     back_to_login: 'Back to login',
     redirecting_login: 'Redirecting...',
-    
-    // Admin Dashboard
     admin_dashboard: 'Admin Dashboard',
     packages: 'Packages',
     users: 'Users',
     support_chat: 'Support Chat',
-    
-    // Hero Section
+    conversations: 'Conversations',
+    products: 'Products',
+    downloads: 'Downloads',
+    support: 'Support',
     hero_title: 'Advanced Cybersecurity Tools',
     hero_subtitle: 'Discover a comprehensive suite of specialized cybersecurity and penetration testing tools',
     get_started: 'Get Started',
     learn_more: 'Learn More',
-    
-    // Features
     features_title: 'Advanced Features',
     features_subtitle: 'Professional tools for experts',
-    
-    // Footer
+    feature_1_title: 'Penetration Testing Tools',
+    feature_1_desc: 'Comprehensive suite of advanced penetration testing tools',
+    feature_2_title: 'Advanced Security',
+    feature_2_desc: 'Advanced security solutions for data and system protection',
+    feature_3_title: 'Advanced Analytics',
+    feature_3_desc: 'Tools for vulnerability analysis and assessment',
+    pricing_title: 'Subscription Plans',
+    pricing_subtitle: 'Choose the right plan for you',
+    basic_plan: 'Basic Plan',
+    gold_plan: 'Gold Plan',
+    diamond_plan: 'Diamond Plan',
+    month: 'month',
+    choose_plan: 'Choose this plan',
+    support_chat_title: 'Technical Support',
+    send_message: 'Send Message',
+    type_message: 'Type your message...',
+    chat_with_support: 'Chat with support team',
+    online_support: 'Support is online',
     quick_links: 'Quick Links',
     follow_us: 'Follow Us',
     all_rights_reserved: 'All rights reserved',
-    
-    // Common
     welcome: 'Welcome',
     loading: 'Loading...',
     error: 'Error',
@@ -191,8 +219,6 @@ const translations = {
     search: 'Search',
     filter: 'Filter',
     sort: 'Sort',
-    
-    // 404 Page
     page_not_found: 'Page not found',
     return_home: 'Return home'
   },
@@ -203,21 +229,15 @@ const translations = {
     pricing: 'Цены',
     about: 'О нас',
     contact: 'Контакты',
-    
-    // Authentication
     login: 'Войти',
     register: 'Регистрация',
     logout: 'Выйти',
     email: 'Электронная почта',
     password: 'Пароль',
     name: 'Имя',
-    
-    // Placeholders
     enter_email: 'Введите email',
     enter_password: 'Введите пароль',
     enter_name: 'Введите имя',
-    
-    // Auth Messages
     logging_in: 'Вход в систему...',
     creating_account: 'Создание аккаунта...',
     login_success: 'Успешный вход',
@@ -230,8 +250,6 @@ const translations = {
     no_account: 'Нет аккаунта?',
     have_account: 'Уже есть аккаунт?',
     create_account: 'Создать новый аккаунт',
-    
-    // Email Verification
     verify_email: 'Подтвердить email',
     verification_code: 'Код подтверждения',
     verification_code_sent_to: 'Код подтверждения отправлен на',
@@ -249,29 +267,41 @@ const translations = {
     new_verification_code: 'Новый код подтверждения:',
     back_to_login: 'Вернуться к входу',
     redirecting_login: 'Перенаправление...',
-    
-    // Admin Dashboard
     admin_dashboard: 'Панель администратора',
     packages: 'Пакеты',
     users: 'Пользователи',
     support_chat: 'Чат поддержки',
-    
-    // Hero Section
+    conversations: 'Беседы',
+    products: 'Продукты',
+    downloads: 'Загрузки',
+    support: 'Поддержка',
     hero_title: 'Продвинутые инструменты кибербезопасности',
     hero_subtitle: 'Откройте для себя комплексный набор специализированных инструментов кибербезопасности и тестирования на проникновение',
     get_started: 'Начать',
     learn_more: 'Узнать больше',
-    
-    // Features
     features_title: 'Продвинутые функции',
     features_subtitle: 'Профессиональные инструменты для экспертов',
-    
-    // Footer
+    feature_1_title: 'Инструменты тестирования на проникновение',
+    feature_1_desc: 'Комплексный набор продвинутых инструментов для тестирования на проникновение',
+    feature_2_title: 'Продвинутая безопасность',
+    feature_2_desc: 'Передовые решения безопасности для защиты данных и систем',
+    feature_3_title: 'Продвинутая аналитика',
+    feature_3_desc: 'Инструменты для анализа и оценки уязвимостей',
+    pricing_title: 'Планы подписки',
+    pricing_subtitle: 'Выберите подходящий план',
+    basic_plan: 'Базовый план',
+    gold_plan: 'Золотой план',
+    diamond_plan: 'Алмазный план',
+    month: 'месяц',
+    choose_plan: 'Выбрать этот план',
+    support_chat_title: 'Техническая поддержка',
+    send_message: 'Отправить сообщение',
+    type_message: 'Введите ваше сообщение...',
+    chat_with_support: 'Чат с командой поддержки',
+    online_support: 'Поддержка онлайн',
     quick_links: 'Быстрые ссылки',
     follow_us: 'Подписывайтесь',
     all_rights_reserved: 'Все права защищены',
-    
-    // Common
     welcome: 'Добро пожаловать',
     loading: 'Загрузка...',
     error: 'Ошибка',
@@ -284,8 +314,6 @@ const translations = {
     search: 'Поиск',
     filter: 'Фильтр',
     sort: 'Сортировка',
-    
-    // 404 Page
     page_not_found: 'Страница не найдена',
     return_home: 'Вернуться домой'
   },
@@ -296,21 +324,15 @@ const translations = {
     pricing: 'Fiyatlar',
     about: 'Hakkımızda',
     contact: 'İletişim',
-    
-    // Authentication
     login: 'Giriş Yap',
     register: 'Kayıt Ol',
     logout: 'Çıkış Yap',
     email: 'E-posta',
     password: 'Şifre',
     name: 'İsim',
-    
-    // Placeholders
     enter_email: 'E-posta girin',
     enter_password: 'Şifre girin',
     enter_name: 'İsim girin',
-    
-    // Auth Messages
     logging_in: 'Giriş yapılıyor...',
     creating_account: 'Hesap oluşturuluyor...',
     login_success: 'Giriş başarılı',
@@ -323,8 +345,6 @@ const translations = {
     no_account: 'Hesabınız yok mu?',
     have_account: 'Zaten hesabınız var mı?',
     create_account: 'Yeni hesap oluştur',
-    
-    // Email Verification
     verify_email: 'E-posta Doğrula',
     verification_code: 'Doğrulama Kodu',
     verification_code_sent_to: 'Doğrulama kodu gönderildi',
@@ -342,29 +362,41 @@ const translations = {
     new_verification_code: 'Yeni doğrulama kodu:',
     back_to_login: 'Girişe geri dön',
     redirecting_login: 'Yönlendiriliyor...',
-    
-    // Admin Dashboard
     admin_dashboard: 'Yönetici Paneli',
     packages: 'Paketler',
     users: 'Kullanıcılar',
     support_chat: 'Destek Sohbeti',
-    
-    // Hero Section
+    conversations: 'Konuşmalar',
+    products: 'Ürünler',
+    downloads: 'İndirilenler',
+    support: 'Destek',
     hero_title: 'Gelişmiş Siber Güvenlik Araçları',
     hero_subtitle: 'Siber güvenlik ve penetrasyon testi için özel araçların kapsamlı paketini keşfedin',
     get_started: 'Başlayın',
     learn_more: 'Daha Fazla Öğren',
-    
-    // Features
     features_title: 'Gelişmiş Özellikler',
     features_subtitle: 'Uzmanlar için profesyonel araçlar',
-    
-    // Footer
+    feature_1_title: 'Penetrasyon Test Araçları',
+    feature_1_desc: 'Gelişmiş penetrasyon test araçlarının kapsamlı paketi',
+    feature_2_title: 'Gelişmiş Güvenlik',
+    feature_2_desc: 'Veri ve sistem koruması için gelişmiş güvenlik çözümleri',
+    feature_3_title: 'Gelişmiş Analitik',
+    feature_3_desc: 'Güvenlik açığı analizi ve değerlendirme araçları',
+    pricing_title: 'Abonelik Planları',
+    pricing_subtitle: 'Size uygun planı seçin',
+    basic_plan: 'Temel Plan',
+    gold_plan: 'Altın Plan',
+    diamond_plan: 'Elmas Plan',
+    month: 'ay',
+    choose_plan: 'Bu planı seç',
+    support_chat_title: 'Teknik Destek',
+    send_message: 'Mesaj Gönder',
+    type_message: 'Mesajınızı yazın...',
+    chat_with_support: 'Destek ekibiyle sohbet edin',
+    online_support: 'Destek çevrimiçi',
     quick_links: 'Hızlı Bağlantılar',
     follow_us: 'Bizi Takip Edin',
     all_rights_reserved: 'Tüm hakları saklıdır',
-    
-    // Common
     welcome: 'Hoş geldiniz',
     loading: 'Yükleniyor...',
     error: 'Hata',
@@ -377,8 +409,6 @@ const translations = {
     search: 'Ara',
     filter: 'Filtrele',
     sort: 'Sırala',
-    
-    // 404 Page
     page_not_found: 'Sayfa bulunamadı',
     return_home: 'Ana sayfaya dön'
   },
@@ -389,21 +419,15 @@ const translations = {
     pricing: 'Giá cả',
     about: 'Về chúng tôi',
     contact: 'Liên hệ',
-    
-    // Authentication
     login: 'Đăng nhập',
     register: 'Đăng ký',
     logout: 'Đăng xuất',
     email: 'Email',
     password: 'Mật khẩu',
     name: 'Tên',
-    
-    // Placeholders
     enter_email: 'Nhập email',
     enter_password: 'Nhập mật khẩu',
     enter_name: 'Nhập tên',
-    
-    // Auth Messages
     logging_in: 'Đang đăng nhập...',
     creating_account: 'Đang tạo tài khoản...',
     login_success: 'Đăng nhập thành công',
@@ -416,8 +440,6 @@ const translations = {
     no_account: 'Chưa có tài khoản?',
     have_account: 'Đã có tài khoản?',
     create_account: 'Tạo tài khoản mới',
-    
-    // Email Verification
     verify_email: 'Xác thực Email',
     verification_code: 'Mã xác thực',
     verification_code_sent_to: 'Mã xác thực đã được gửi đến',
@@ -435,29 +457,41 @@ const translations = {
     new_verification_code: 'Mã xác thực mới:',
     back_to_login: 'Quay lại đăng nhập',
     redirecting_login: 'Đang chuyển hướng...',
-    
-    // Admin Dashboard
     admin_dashboard: 'Bảng điều khiển quản trị',
     packages: 'Gói',
     users: 'Người dùng',
     support_chat: 'Chat hỗ trợ',
-    
-    // Hero Section
+    conversations: 'Cuộc trò chuyện',
+    products: 'Sản phẩm',
+    downloads: 'Tải xuống',
+    support: 'Hỗ trợ',
     hero_title: 'Công cụ An ninh mạng Nâng cao',
     hero_subtitle: 'Khám phá bộ công cụ chuyên dụng toàn diện cho an ninh mạng và kiểm tra xâm nhập',
     get_started: 'Bắt đầu',
     learn_more: 'Tìm hiểu thêm',
-    
-    // Features
     features_title: 'Tính năng Nâng cao',
     features_subtitle: 'Công cụ chuyên nghiệp cho các chuyên gia',
-    
-    // Footer
+    feature_1_title: 'Công cụ Kiểm tra Xâm nhập',
+    feature_1_desc: 'Bộ công cụ kiểm tra xâm nhập nâng cao toàn diện',
+    feature_2_title: 'Bảo mật Nâng cao',
+    feature_2_desc: 'Giải pháp bảo mật tiên tiến để bảo vệ dữ liệu và hệ thống',
+    feature_3_title: 'Phân tích Nâng cao',
+    feature_3_desc: 'Công cụ phân tích và đánh giá lỗ hổng bảo mật',
+    pricing_title: 'Gói Đăng ký',
+    pricing_subtitle: 'Chọn gói phù hợp với bạn',
+    basic_plan: 'Gói Cơ bản',
+    gold_plan: 'Gói Vàng',
+    diamond_plan: 'Gói Kim cương',
+    month: 'tháng',
+    choose_plan: 'Chọn gói này',
+    support_chat_title: 'Hỗ trợ Kỹ thuật',
+    send_message: 'Gửi Tin nhắn',
+    type_message: 'Nhập tin nhắn của bạn...',
+    chat_with_support: 'Chat với đội hỗ trợ',
+    online_support: 'Hỗ trợ đang trực tuyến',
     quick_links: 'Liên kết nhanh',
     follow_us: 'Theo dõi chúng tôi',
     all_rights_reserved: 'Tất cả quyền được bảo lưu',
-    
-    // Common
     welcome: 'Chào mừng',
     loading: 'Đang tải...',
     error: 'Lỗi',
@@ -470,8 +504,6 @@ const translations = {
     search: 'Tìm kiếm',
     filter: 'Lọc',
     sort: 'Sắp xếp',
-    
-    // 404 Page
     page_not_found: 'Không tìm thấy trang',
     return_home: 'Trở về trang chủ'
   }

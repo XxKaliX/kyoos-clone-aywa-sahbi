@@ -1,100 +1,98 @@
-import { Smartphone, Users, BarChart, Globe, GamepadIcon, CreditCard, Clock, Shield } from 'lucide-react';
 
-const features = [
-  {
-    icon: GamepadIcon,
-    title: "شحن الألعاب",
-    description: "شحن جميع الألعاب الشهيرة مثل PUBG، Free Fire، Fortnite وغيرها بأسرع وقت"
-  },
-  {
-    icon: Users,
-    title: "وسائل التواصل الاجتماعي",
-    description: "زيادة المتابعين والإعجابات والمشاهدات على إنستغرام، تيك توك، يوتيوب وجميع المنصات"
-  },
-  {
-    icon: CreditCard,
-    title: "البطاقات الرقمية",
-    description: "بطاقات Google Play، iTunes، Steam، PlayStation وجميع البطاقات الرقمية"
-  },
-  {
-    icon: Globe,
-    title: "خدمات عالمية",
-    description: "نخدم العملاء في جميع أنحاء العالم بدعم 24/7 ومتابعة مستمرة"
-  }
-];
-
-const stats = [
-  { number: "50,000+", label: "عميل راضي" },
-  { number: "1M+", label: "طلب مكتمل" },
-  { number: "99.9%", label: "معدل النجاح" },
-  { number: "24/7", label: "دعم فني" }
-];
+import { Shield, Zap, Target, Lock, Database, Globe } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Features = () => {
-  return (
-    <section className="py-20 px-4 bg-slate-900">
-      <div className="max-w-7xl mx-auto">
-        {/* Stats Section */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
-          {stats.map((stat, index) => (
-            <div key={index} className="text-center">
-              <div className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-                {stat.number}
-              </div>
-              <div className="text-gray-400 text-lg">{stat.label}</div>
-            </div>
-          ))}
-        </div>
+  const { t } = useLanguage();
 
-        {/* Features Header */}
+  const features = [
+    {
+      icon: Shield,
+      title: t('feature_1_title'),
+      description: t('feature_1_desc'),
+      color: 'from-blue-500 to-cyan-500'
+    },
+    {
+      icon: Lock,
+      title: t('feature_2_title'),
+      description: t('feature_2_desc'),
+      color: 'from-purple-500 to-pink-500'
+    },
+    {
+      icon: Target,
+      title: t('feature_3_title'),
+      description: t('feature_3_desc'),
+      color: 'from-orange-500 to-red-500'
+    }
+  ];
+
+  return (
+    <section className="py-20 bg-slate-800/50" id="features">
+      <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-white">
-            خدماتنا المتميزة
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            {t('features_title')}
           </h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            نقدم مجموعة شاملة من الخدمات الرقمية بأعلى معايير الجودة والسرعة في التنفيذ
+          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            {t('features_subtitle')}
           </p>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <div 
+            <div
               key={index}
-              className="group bg-slate-800/50 p-8 rounded-2xl border border-blue-500/20 hover:border-blue-500/50 transition-all duration-300 hover:transform hover:scale-105 backdrop-blur-sm"
+              className="group relative bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 hover:border-blue-500/50 transition-all duration-300 hover:transform hover:scale-105"
             >
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:shadow-lg group-hover:shadow-blue-500/25 transition-all">
-                <feature.icon className="w-8 h-8 text-white" />
+              {/* Background Glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
+              {/* Icon */}
+              <div className="relative mb-6">
+                <div className={`inline-flex p-3 rounded-xl bg-gradient-to-r ${feature.color} bg-opacity-10`}>
+                  <feature.icon className={`w-8 h-8 bg-gradient-to-r ${feature.color} bg-clip-text text-transparent`} />
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-white mb-4">{feature.title}</h3>
-              <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+
+              {/* Content */}
+              <div className="relative z-10">
+                <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-blue-300 transition-colors">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-400 leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+
+              {/* Hover Effect */}
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-b-2xl transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
             </div>
           ))}
         </div>
 
-        {/* Additional Features */}
-        <div className="grid md:grid-cols-2 gap-8 mt-16">
-          <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-8 rounded-2xl border border-blue-500/30">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 w-12 h-12 rounded-xl flex items-center justify-center">
-                <Clock className="w-6 h-6 text-white" />
+        {/* Additional Features Grid */}
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-2xl p-8">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                <Database className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-white">سرعة في التنفيذ</h3>
+              <h3 className="text-xl font-semibold text-white">Real-time Monitoring</h3>
             </div>
-            <p className="text-gray-300 text-lg leading-relaxed">
-              نضمن تنفيذ جميع الطلبات في أسرع وقت ممكن مع الحفاظ على أعلى معايير الجودة
+            <p className="text-gray-400">
+              Monitor your systems in real-time with advanced threat detection and automated response capabilities.
             </p>
           </div>
 
-          <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 p-8 rounded-2xl border border-cyan-500/30">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="bg-gradient-to-r from-cyan-500 to-blue-500 w-12 h-12 rounded-xl flex items-center justify-center">
-                <Shield className="w-6 h-6 text-white" />
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-2xl p-8">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg">
+                <Globe className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-white">أمان وموثوقية</h3>
+              <h3 className="text-xl font-semibold text-white">Global Network</h3>
             </div>
-            <p className="text-gray-300 text-lg leading-relaxed">
-              جميع خدماتنا آمنة ومضمونة مع حماية كاملة لبيانات العملاء وخصوصيتهم
+            <p className="text-gray-400">
+              Access our global network of security resources and threat intelligence from anywhere in the world.
             </p>
           </div>
         </div>
