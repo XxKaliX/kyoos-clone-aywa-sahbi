@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "./pages/Index";
 import AdminDashboard from "./pages/AdminDashboard";
+import Downloads from "./pages/Downloads";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/downloads" element={<Downloads />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

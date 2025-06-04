@@ -3,9 +3,10 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'user' | 'admin' | 'superadmin';
+  role: 'user' | 'admin' | 'superadmin' | 'owner' | 'support';
   isVerified: boolean;
   subscriptionLevel: 'basic' | 'gold' | 'diamond' | null;
+  subscriptionExpiry: string | null;
   createdAt: string;
   permissions?: string[];
 }
@@ -36,6 +37,16 @@ export interface Package {
   isActive: boolean;
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  fileUrl: string;
+  requiredLevel: 'basic' | 'gold' | 'diamond';
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface ChatMessage {
   id: string;
   userId: string;
@@ -43,4 +54,17 @@ export interface ChatMessage {
   message: string;
   timestamp: string;
   isAdmin: boolean;
+  isRead?: boolean;
+  conversationId: string;
+}
+
+export interface SupportConversation {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  status: 'open' | 'closed';
+  lastMessage: string;
+  lastMessageTime: string;
+  unreadCount: number;
 }

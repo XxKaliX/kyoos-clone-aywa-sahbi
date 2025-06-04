@@ -33,24 +33,37 @@ const Header = () => {
           </Link>
           
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors font-medium">{t('home')}</a>
+            <Link to="/" className="text-gray-300 hover:text-blue-400 transition-colors font-medium">{t('home')}</Link>
             <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors font-medium">{t('services')}</a>
             <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors font-medium">{t('pricing')}</a>
             <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors font-medium">{t('about')}</a>
-            <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors font-medium">{t('contact')}</a>
             
             <LanguageSelector />
             
             {user ? (
               <div className="flex items-center gap-3">
-                <span className="text-gray-300">مرحباً، {user.name}</span>
-                {(user.role === 'admin' || user.role === 'superadmin') && (
+                <span className="text-gray-300">{t('welcome')}, {user.name}</span>
+                
+                {user.subscriptionLevel && (
+                  <Link to="/downloads">
+                    <button className="border border-green-500 text-green-400 hover:bg-green-500 hover:text-white px-4 py-2 rounded-lg transition-all text-sm">
+                      {t('downloads')}
+                    </button>
+                  </Link>
+                )}
+                
+                {['admin', 'superadmin', 'owner', 'support'].includes(user.role) && (
                   <Link to="/admin">
                     <button className="border border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white px-4 py-2 rounded-lg transition-all text-sm">
                       {t('admin_dashboard')}
                     </button>
                   </Link>
                 )}
+                
+                <a href="#support" className="border border-yellow-500 text-yellow-400 hover:bg-yellow-500 hover:text-white px-4 py-2 rounded-lg transition-all text-sm">
+                  {t('support')}
+                </a>
+                
                 <button
                   onClick={logout}
                   className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-all text-sm"
@@ -87,24 +100,37 @@ const Header = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-blue-500/20">
             <nav className="flex flex-col gap-4">
-              <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors">{t('home')}</a>
+              <Link to="/" className="text-gray-300 hover:text-blue-400 transition-colors">{t('home')}</Link>
               <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors">{t('services')}</a>
               <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors">{t('pricing')}</a>
               <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors">{t('about')}</a>
-              <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors">{t('contact')}</a>
               
               <LanguageSelector />
               
               {user ? (
                 <div className="flex flex-col gap-2 mt-4">
-                  <span className="text-gray-300">مرحباً، {user.name}</span>
-                  {(user.role === 'admin' || user.role === 'superadmin') && (
+                  <span className="text-gray-300">{t('welcome')}, {user.name}</span>
+                  
+                  {user.subscriptionLevel && (
+                    <Link to="/downloads">
+                      <button className="border border-green-500 text-green-400 px-6 py-2 rounded-lg w-full">
+                        {t('downloads')}
+                      </button>
+                    </Link>
+                  )}
+                  
+                  {['admin', 'superadmin', 'owner', 'support'].includes(user.role) && (
                     <Link to="/admin">
                       <button className="border border-blue-500 text-blue-400 px-6 py-2 rounded-lg w-full">
                         {t('admin_dashboard')}
                       </button>
                     </Link>
                   )}
+                  
+                  <a href="#support" className="border border-yellow-500 text-yellow-400 px-6 py-2 rounded-lg text-center">
+                    {t('support')}
+                  </a>
+                  
                   <button
                     onClick={logout}
                     className="bg-red-500 text-white px-6 py-2 rounded-lg w-full"
