@@ -1,0 +1,46 @@
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'user' | 'admin' | 'superadmin';
+  isVerified: boolean;
+  subscriptionLevel: 'basic' | 'gold' | 'diamond' | null;
+  createdAt: string;
+  permissions?: string[];
+}
+
+export interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string, name: string) => Promise<boolean>;
+  logout: () => void;
+  isLoading: boolean;
+}
+
+export interface Package {
+  id: string;
+  name: string;
+  nameEn: string;
+  nameRu: string;
+  nameTr: string;
+  nameVi: string;
+  price: number;
+  originalPrice: number;
+  features: string[];
+  featuresEn: string[];
+  featuresRu: string[];
+  featuresTr: string[];
+  featuresVi: string[];
+  level: 'basic' | 'gold' | 'diamond';
+  isActive: boolean;
+}
+
+export interface ChatMessage {
+  id: string;
+  userId: string;
+  userName: string;
+  message: string;
+  timestamp: string;
+  isAdmin: boolean;
+}

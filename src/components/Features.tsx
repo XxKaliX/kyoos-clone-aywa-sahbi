@@ -1,4 +1,3 @@
-
 import { Smartphone, Users, BarChart, Globe, GamepadIcon, CreditCard, Clock, Shield } from 'lucide-react';
 
 const features = [
@@ -16,16 +15,6 @@ const features = [
     icon: CreditCard,
     title: "البطاقات الرقمية",
     description: "بطاقات Google Play، iTunes، Steam، PlayStation وجميع البطاقات الرقمية"
-  },
-  {
-    icon: Smartphone,
-    title: "تطبيقات الهاتف",
-    description: "خدمات التطبيقات المختلفة مثل Netflix، Spotify، Disney+ وغيرها"
-  },
-  {
-    icon: BarChart,
-    title: "التسويق الرقمي",
-    description: "حلول تسويقية متكاملة لتنمية أعمالك وزيادة مبيعاتك أونلاين"
   },
   {
     icon: Globe,
