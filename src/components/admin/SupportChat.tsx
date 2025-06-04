@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +33,8 @@ const SupportChat = () => {
       userName: user.name,
       message: newMessage,
       timestamp: new Date().toISOString(),
-      isAdmin: user.role === 'admin' || user.role === 'superadmin'
+      isAdmin: user.role === 'admin' || user.role === 'superadmin' || user.role === 'owner' || user.role === 'support',
+      conversationId: user.id // Using user.id as the conversation identifier
     };
 
     saveMessages([...messages, message]);
