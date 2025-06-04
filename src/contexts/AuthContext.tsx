@@ -24,7 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; user?: User }> => {
     setIsLoading(true);
     
     const users = JSON.parse(localStorage.getItem('users') || '[]');
@@ -35,14 +35,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (foundUser) {
       const userWithoutPassword = { ...foundUser };
       delete (userWithoutPassword as any).password;
+      
       setUser(userWithoutPassword);
       localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
       setIsLoading(false);
-      return true;
+      return { success: true, user: userWithoutPassword };
     }
     
     setIsLoading(false);
-    return false;
+    return { success: false };
   };
 
   const register = async (email: string, password: string, name: string): Promise<boolean> => {
@@ -74,7 +75,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Create superadmin if first user
     if (users.length === 1) {
       users[0].role = 'superadmin';
-      users[0].isVerified = true;
       localStorage.setItem('users', JSON.stringify(users));
     }
     

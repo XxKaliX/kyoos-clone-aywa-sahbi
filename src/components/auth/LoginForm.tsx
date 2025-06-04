@@ -24,18 +24,36 @@ const LoginForm = ({ onSwitchToRegister, onClose }: LoginFormProps) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const success = await login(email, password);
+    console.log('Attempting login for:', email);
+    const result = await login(email, password);
     
-    if (success) {
+    if (result.success) {
+      if (!result.user?.isVerified) {
+        toast({
+          title: t('email_verification_required'),
+          description: t('please_verify_email'),
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       toast({
-        title: "نجح تسجيل الدخول",
-        description: "مرحباً بك مرة أخرى!"
+        title: t('login_success'),
+        description: t('welcome_back')
       });
       onClose();
+      
+      // Navigate to admin if user is admin/superadmin
+      if (result.user.role === 'admin' || result.user.role === 'superadmin') {
+        setTimeout(() => {
+          window.location.href = '/admin';
+        }, 1000);
+      }
     } else {
       toast({
-        title: "خطأ في تسجيل الدخول",
-        description: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+        title: t('login_error'),
+        description: t('invalid_credentials'),
         variant: "destructive"
       });
     }
@@ -46,31 +64,33 @@ const LoginForm = ({ onSwitchToRegister, onClose }: LoginFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="email">{t('email')}</Label>
+        <Label htmlFor="email" className="text-white">{t('email')}</Label>
         <Input
           id="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="mt-1"
+          className="mt-1 bg-slate-700 border-slate-600 text-white placeholder:text-gray-400"
+          placeholder={t('enter_email')}
         />
       </div>
       
       <div>
-        <Label htmlFor="password">{t('password')}</Label>
+        <Label htmlFor="password" className="text-white">{t('password')}</Label>
         <Input
           id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="mt-1"
+          className="mt-1 bg-slate-700 border-slate-600 text-white placeholder:text-gray-400"
+          placeholder={t('enter_password')}
         />
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? 'جارٍ تسجيل الدخول...' : t('login')}
+        {isLoading ? t('logging_in') : t('login')}
       </Button>
 
       <div className="text-center">
@@ -79,7 +99,7 @@ const LoginForm = ({ onSwitchToRegister, onClose }: LoginFormProps) => {
           onClick={onSwitchToRegister}
           className="text-blue-400 hover:underline"
         >
-          ليس لديك حساب؟ {t('register')}
+          {t('no_account')} {t('register')}
         </button>
       </div>
     </form>

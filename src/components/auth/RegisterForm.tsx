@@ -28,15 +28,21 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
     const success = await register(email, password, name);
     
     if (success) {
+      // Send verification email (simulated)
+      const verificationCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      localStorage.setItem(`verification_${email}`, verificationCode);
+      
       toast({
-        title: "تم إنشاء الحساب بنجاح",
-        description: "يمكنك الآن تسجيل الدخول"
+        title: t('account_created'),
+        description: `${t('verification_email_sent')} ${verificationCode}`,
       });
+      
+      // Switch to verification view
       onSwitchToLogin();
     } else {
       toast({
-        title: "خطأ في إنشاء الحساب",
-        description: "البريد الإلكتروني مستخدم بالفعل",
+        title: t('registration_error'),
+        description: t('email_already_exists'),
         variant: "destructive"
       });
     }
@@ -47,43 +53,46 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="name">{t('name')}</Label>
+        <Label htmlFor="name" className="text-white">{t('name')}</Label>
         <Input
           id="name"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="mt-1"
+          className="mt-1 bg-slate-700 border-slate-600 text-white placeholder:text-gray-400"
+          placeholder={t('enter_name')}
         />
       </div>
 
       <div>
-        <Label htmlFor="email">{t('email')}</Label>
+        <Label htmlFor="email" className="text-white">{t('email')}</Label>
         <Input
           id="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="mt-1"
+          className="mt-1 bg-slate-700 border-slate-600 text-white placeholder:text-gray-400"
+          placeholder={t('enter_email')}
         />
       </div>
       
       <div>
-        <Label htmlFor="password">{t('password')}</Label>
+        <Label htmlFor="password" className="text-white">{t('password')}</Label>
         <Input
           id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="mt-1"
+          className="mt-1 bg-slate-700 border-slate-600 text-white placeholder:text-gray-400"
+          placeholder={t('enter_password')}
         />
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? 'جارٍ إنشاء الحساب...' : t('register')}
+        {isLoading ? t('creating_account') : t('register')}
       </Button>
 
       <div className="text-center">
@@ -92,7 +101,7 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
           onClick={onSwitchToLogin}
           className="text-blue-400 hover:underline"
         >
-          لديك حساب بالفعل؟ {t('login')}
+          {t('have_account')} {t('login')}
         </button>
       </div>
     </form>
