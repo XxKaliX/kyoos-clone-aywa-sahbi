@@ -14,7 +14,7 @@ const UserSupportChat = () => {
   const [newMessage, setNewMessage] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     if (user) {
@@ -111,9 +111,7 @@ const UserSupportChat = () => {
                       }`}
                     >
                       <div className="text-xs opacity-70 mb-1">
-                        {message.userName} - {new Date(message.timestamp).toLocaleString(
-                          user.language || 'ar'
-                        )}
+                        {message.userName} - {new Date(message.timestamp).toLocaleString(language)}
                       </div>
                       <div>{message.message}</div>
                     </div>
