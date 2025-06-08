@@ -4,60 +4,139 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChatMessage } from '@/types/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Send, MessageCircle, Minimize2, Maximize2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+interface Message {
+  id: string;
+  message: string;
+  created_at: string;
+  is_admin: boolean;
+  user_id: string;
+  profiles?: {
+    full_name: string;
+  };
+}
+
+interface Ticket {
+  id: string;
+  title: string;
+  status: string;
+}
 
 const UserSupportChat = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
+  const [currentTicket, setCurrentTicket] = useState<Ticket | null>(null);
+  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { t, language } = useLanguage();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
-      const savedMessages = localStorage.getItem('supportMessages');
-      if (savedMessages) {
-        const allMessages = JSON.parse(savedMessages);
-        const userMessages = allMessages.filter((msg: ChatMessage) => 
-          msg.conversationId === user.id || msg.userId === user.id
-        );
-        setMessages(userMessages);
-      }
+      initializeTicket();
     }
   }, [user]);
 
-  const saveMessages = (updatedMessages: ChatMessage[]) => {
-    const allMessages = JSON.parse(localStorage.getItem('supportMessages') || '[]');
-    
-    // Remove old messages for this user
-    const otherMessages = allMessages.filter((msg: ChatMessage) => 
-      msg.conversationId !== user?.id && msg.userId !== user?.id
-    );
-    
-    // Add updated messages
-    const newAllMessages = [...otherMessages, ...updatedMessages];
-    localStorage.setItem('supportMessages', JSON.stringify(newAllMessages));
-    setMessages(updatedMessages);
+  const initializeTicket = async () => {
+    if (!user) return;
+
+    try {
+      // Check for existing open ticket
+      const { data: existingTickets, error } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'open')
+        .limit(1);
+
+      if (error) throw error;
+
+      if (existingTickets && existingTickets.length > 0) {
+        setCurrentTicket(existingTickets[0]);
+        await loadMessages(existingTickets[0].id);
+      } else {
+        // Create new ticket
+        const { data: newTicket, error: createError } = await supabase
+          .from('support_tickets')
+          .insert({
+            user_id: user.id,
+            title: `دعم فني - ${user.name}`,
+            status: 'open',
+            priority: 'medium'
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        setCurrentTicket(newTicket);
+      }
+    } catch (error) {
+      console.error('Error initializing ticket:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في تهيئة محادثة الدعم",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSendMessage = () => {
-    if (!newMessage.trim() || !user) return;
+  const loadMessages = async (ticketId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('support_messages')
+        .select(`
+          *,
+          profiles!support_messages_user_id_fkey(full_name)
+        `)
+        .eq('ticket_id', ticketId)
+        .order('created_at', { ascending: true });
 
-    const message: ChatMessage = {
-      id: Date.now().toString(),
-      userId: user.id,
-      userName: user.name,
-      message: newMessage,
-      timestamp: new Date().toISOString(),
-      isAdmin: false,
-      conversationId: user.id
-    };
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في تحميل الرسائل",
+        variant: "destructive",
+      });
+    }
+  };
 
-    saveMessages([...messages, message]);
-    setNewMessage('');
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !user || !currentTicket) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('support_messages')
+        .insert({
+          ticket_id: currentTicket.id,
+          user_id: user.id,
+          message: newMessage,
+          is_admin: false
+        });
+
+      if (error) throw error;
+
+      setNewMessage('');
+      await loadMessages(currentTicket.id);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في إرسال الرسالة",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -101,17 +180,17 @@ const UserSupportChat = () => {
                 {messages.map((message) => (
                   <div 
                     key={message.id}
-                    className={`flex ${message.isAdmin ? 'justify-start' : 'justify-end'}`}
+                    className={`flex ${message.is_admin ? 'justify-start' : 'justify-end'}`}
                   >
                     <div 
                       className={`max-w-xs p-2 rounded-lg text-sm ${
-                        message.isAdmin 
+                        message.is_admin 
                           ? 'bg-gray-700 text-white' 
                           : 'bg-blue-600 text-white'
                       }`}
                     >
                       <div className="text-xs opacity-70 mb-1">
-                        {message.userName} - {new Date(message.timestamp).toLocaleString(language)}
+                        {message.profiles?.full_name || user.name} - {new Date(message.created_at).toLocaleString(language)}
                       </div>
                       <div>{message.message}</div>
                     </div>
@@ -128,8 +207,9 @@ const UserSupportChat = () => {
                   onKeyPress={handleKeyPress}
                   placeholder={t('type_message')}
                   className="flex-1 text-sm"
+                  disabled={loading}
                 />
-                <Button onClick={handleSendMessage} size="sm">
+                <Button onClick={handleSendMessage} size="sm" disabled={loading}>
                   <Send className="w-3 h-3" />
                 </Button>
               </div>

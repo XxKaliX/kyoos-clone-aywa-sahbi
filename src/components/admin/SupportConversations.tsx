@@ -4,16 +4,44 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SupportConversation, ChatMessage } from '@/types/auth';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Send, MessageCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+interface Message {
+  id: string;
+  message: string;
+  created_at: string;
+  is_admin: boolean;
+  user_id: string;
+  ticket_id: string;
+  profiles?: {
+    full_name: string;
+  };
+}
+
+interface Conversation {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  profiles?: {
+    full_name: string;
+  };
+  lastMessage?: string;
+}
 
 const SupportConversations = () => {
-  const [conversations, setConversations] = useState<SupportConversation[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     loadConversations();
@@ -25,70 +53,98 @@ const SupportConversations = () => {
     }
   }, [selectedConversation]);
 
-  const loadConversations = () => {
-    const allMessages = JSON.parse(localStorage.getItem('supportMessages') || '[]');
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    
-    // Group messages by user
-    const conversationMap = new Map<string, SupportConversation>();
-    
-    allMessages.forEach((message: ChatMessage) => {
-      if (!message.isAdmin) {
-        const user = users.find((u: any) => u.id === message.userId);
-        if (!conversationMap.has(message.userId)) {
-          conversationMap.set(message.userId, {
-            id: message.userId,
-            userId: message.userId,
-            userName: message.userName,
-            userEmail: user?.email || 'غير معروف',
-            status: 'open',
-            lastMessage: message.message,
-            lastMessageTime: message.timestamp,
-            unreadCount: 0
-          });
-        } else {
-          const conv = conversationMap.get(message.userId)!;
-          if (new Date(message.timestamp) > new Date(conv.lastMessageTime)) {
-            conv.lastMessage = message.message;
-            conv.lastMessageTime = message.timestamp;
-          }
-        }
-      }
-    });
+  const loadConversations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select(`
+          *,
+          profiles!support_tickets_user_id_fkey(full_name)
+        `)
+        .order('updated_at', { ascending: false });
 
-    setConversations(Array.from(conversationMap.values()).sort((a, b) => 
-      new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
-    ));
+      if (error) throw error;
+
+      // Get last message for each conversation
+      const conversationsWithLastMessage = await Promise.all(
+        (data || []).map(async (conv) => {
+          const { data: lastMessageData } = await supabase
+            .from('support_messages')
+            .select('message')
+            .eq('ticket_id', conv.id)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          return {
+            ...conv,
+            lastMessage: lastMessageData?.[0]?.message || 'لا توجد رسائل'
+          };
+        })
+      );
+
+      setConversations(conversationsWithLastMessage);
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في تحميل المحادثات",
+        variant: "destructive",
+      });
+    }
   };
 
-  const loadMessages = (conversationId: string) => {
-    const allMessages = JSON.parse(localStorage.getItem('supportMessages') || '[]');
-    const conversationMessages = allMessages.filter((msg: ChatMessage) => 
-      msg.conversationId === conversationId || msg.userId === conversationId
-    );
-    setMessages(conversationMessages);
+  const loadMessages = async (ticketId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('support_messages')
+        .select(`
+          *,
+          profiles!support_messages_user_id_fkey(full_name)
+        `)
+        .eq('ticket_id', ticketId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في تحميل الرسائل",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!newMessage.trim() || !user || !selectedConversation) return;
 
-    const message: ChatMessage = {
-      id: Date.now().toString(),
-      userId: user.id,
-      userName: user.name,
-      message: newMessage,
-      timestamp: new Date().toISOString(),
-      isAdmin: true,
-      conversationId: selectedConversation
-    };
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('support_messages')
+        .insert({
+          ticket_id: selectedConversation,
+          user_id: user.id,
+          message: newMessage,
+          is_admin: true
+        });
 
-    const allMessages = JSON.parse(localStorage.getItem('supportMessages') || '[]');
-    allMessages.push(message);
-    localStorage.setItem('supportMessages', JSON.stringify(allMessages));
+      if (error) throw error;
 
-    setMessages([...messages, message]);
-    setNewMessage('');
-    loadConversations(); // Refresh conversations list
+      setNewMessage('');
+      await loadMessages(selectedConversation);
+      await loadConversations(); // Refresh to update timestamps
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في إرسال الرسالة",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -123,13 +179,15 @@ const SupportConversations = () => {
                     }`}
                     onClick={() => setSelectedConversation(conversation.id)}
                   >
-                    <div className="font-medium">{conversation.userName}</div>
-                    <div className="text-sm text-gray-400">{conversation.userEmail}</div>
+                    <div className="font-medium">{conversation.title}</div>
+                    <div className="text-sm text-gray-400">
+                      {conversation.profiles?.full_name || 'مستخدم غير معروف'}
+                    </div>
                     <div className="text-xs text-gray-500 mt-1 truncate">
                       {conversation.lastMessage}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {new Date(conversation.lastMessageTime).toLocaleString('ar')}
+                      {new Date(conversation.updated_at).toLocaleString('ar')}
                     </div>
                   </div>
                 ))}
@@ -144,7 +202,7 @@ const SupportConversations = () => {
             <CardHeader>
               <CardTitle>
                 {selectedConversation 
-                  ? conversations.find(c => c.id === selectedConversation)?.userName || 'محادثة'
+                  ? conversations.find(c => c.id === selectedConversation)?.title || 'محادثة'
                   : 'اختر محادثة'
                 }
               </CardTitle>
@@ -155,17 +213,17 @@ const SupportConversations = () => {
                   {messages.map((message) => (
                     <div 
                       key={message.id}
-                      className={`flex ${message.isAdmin ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${message.is_admin ? 'justify-end' : 'justify-start'}`}
                     >
                       <div 
                         className={`max-w-xs p-3 rounded-lg ${
-                          message.isAdmin 
+                          message.is_admin 
                             ? 'bg-blue-600 text-white' 
                             : 'bg-gray-700 text-white'
                         }`}
                       >
                         <div className="text-xs opacity-70 mb-1">
-                          {message.userName} - {new Date(message.timestamp).toLocaleString('ar')}
+                          {message.profiles?.full_name || 'مستخدم غير معروف'} - {new Date(message.created_at).toLocaleString('ar')}
                         </div>
                         <div>{message.message}</div>
                       </div>
@@ -183,8 +241,9 @@ const SupportConversations = () => {
                       onKeyPress={handleKeyPress}
                       placeholder="اكتب رسالتك..."
                       className="flex-1"
+                      disabled={loading}
                     />
-                    <Button onClick={handleSendMessage}>
+                    <Button onClick={handleSendMessage} disabled={loading}>
                       <Send className="w-4 h-4" />
                     </Button>
                   </div>
