@@ -9,6 +9,7 @@ import UserManager from '@/components/admin/UserManager';
 import SupportChat from '@/components/admin/SupportChat';
 import ProductManager from '@/components/admin/ProductManager';
 import SupportConversations from '@/components/admin/SupportConversations';
+import AccountManager from '@/components/admin/AccountManager';
 import { Navigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
@@ -22,6 +23,7 @@ const AdminDashboard = () => {
   const canAccessUsers = user.role === 'owner' || user.role === 'superadmin';
   const canAccessPackages = user.role === 'owner' || user.role === 'superadmin' || user.role === 'admin';
   const canAccessProducts = user.role === 'owner' || user.role === 'superadmin' || user.role === 'admin';
+  const canAccessAccounts = user.role === 'owner' || user.role === 'superadmin' || user.role === 'admin';
   const canAccessSupport = true; // All admin roles can access support
 
   return (
@@ -35,9 +37,10 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="support" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-slate-800">
+          <TabsList className="grid w-full grid-cols-6 bg-slate-800">
             <TabsTrigger value="support">{t('support_chat')}</TabsTrigger>
             <TabsTrigger value="conversations">{t('conversations')}</TabsTrigger>
+            {canAccessAccounts && <TabsTrigger value="accounts">الحسابات</TabsTrigger>}
             {canAccessPackages && <TabsTrigger value="packages">{t('packages')}</TabsTrigger>}
             {canAccessProducts && <TabsTrigger value="products">{t('products')}</TabsTrigger>}
             {canAccessUsers && <TabsTrigger value="users">{t('users')}</TabsTrigger>}
@@ -50,6 +53,12 @@ const AdminDashboard = () => {
           <TabsContent value="conversations">
             <SupportConversations />
           </TabsContent>
+
+          {canAccessAccounts && (
+            <TabsContent value="accounts">
+              <AccountManager />
+            </TabsContent>
+          )}
 
           {canAccessPackages && (
             <TabsContent value="packages">

@@ -9,6 +9,138 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      account_orders: {
+        Row: {
+          account_id: string | null
+          created_at: string | null
+          discount_amount: number | null
+          discount_code_id: string | null
+          final_price: number
+          id: string
+          original_price: number
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string | null
+          discount_amount?: number | null
+          discount_code_id?: string | null
+          final_price: number
+          id?: string
+          original_price: number
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string | null
+          discount_amount?: number | null
+          discount_code_id?: string | null
+          final_price?: number
+          id?: string
+          original_price?: number
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_orders_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_orders_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounts: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price: number
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price: number
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price?: number
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      discount_codes: {
+        Row: {
+          applicable_accounts: Json | null
+          applicable_products: Json | null
+          applicable_subscriptions: Json | null
+          code: string
+          created_at: string | null
+          current_uses: number | null
+          discount_amount: number | null
+          discount_percentage: number
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+        }
+        Insert: {
+          applicable_accounts?: Json | null
+          applicable_products?: Json | null
+          applicable_subscriptions?: Json | null
+          code: string
+          created_at?: string | null
+          current_uses?: number | null
+          discount_amount?: number | null
+          discount_percentage: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+        }
+        Update: {
+          applicable_accounts?: Json | null
+          applicable_products?: Json | null
+          applicable_subscriptions?: Json | null
+          code?: string
+          created_at?: string | null
+          current_uses?: number | null
+          discount_amount?: number | null
+          discount_percentage?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+        }
+        Relationships: []
+      }
       packages: {
         Row: {
           category: string | null
@@ -323,7 +455,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "owner"
+        | "superadmin"
+        | "support"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -439,7 +577,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "owner",
+        "superadmin",
+        "support",
+      ],
     },
   },
 } as const
