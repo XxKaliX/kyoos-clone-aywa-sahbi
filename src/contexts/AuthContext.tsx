@@ -73,11 +73,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (profile) {
+        // Map database roles to our type system
+        const mapRole = (dbRole: string): User['role'] => {
+          switch (dbRole) {
+            case 'owner': return 'owner';
+            case 'superadmin': return 'superadmin';
+            case 'admin': return 'admin';
+            case 'support': return 'support';
+            case 'moderator': return 'admin'; // Map moderator to admin
+            default: return 'user';
+          }
+        };
+
         setUser({
           id: userId,
           email: email,
           name: profile.full_name || 'المستخدم',
-          role: userRole?.role || 'user',
+          role: mapRole(userRole?.role || 'user'),
           isVerified: true,
           subscriptionLevel: null,
           subscriptionExpiry: null,

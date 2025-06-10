@@ -24,12 +24,12 @@ const UserManager = () => {
 
   const loadUsers = async () => {
     try {
-      // Load profiles with roles
+      // Load profiles with roles - fixed query structure
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select(`
           *,
-          user_roles(role)
+          user_roles!inner(role)
         `);
 
       if (error) throw error;
