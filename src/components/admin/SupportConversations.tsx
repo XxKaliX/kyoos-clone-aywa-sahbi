@@ -56,7 +56,6 @@ const SupportConversations = () => {
 
       if (error) throw error;
 
-      // Get last message for each conversation
       const conversationsWithLastMessage = await Promise.all(
         (data || []).map(async (conv) => {
           const { data: lastMessageData } = await supabase
@@ -122,7 +121,7 @@ const SupportConversations = () => {
 
       setNewMessage('');
       await loadMessages(selectedConversation);
-      await loadConversations(); // Refresh to update timestamps
+      await loadConversations();
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -146,7 +145,6 @@ const SupportConversations = () => {
       <h2 className="text-2xl font-bold">محادثات الدعم الفني</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[600px]">
-        {/* Conversations List */}
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -184,7 +182,6 @@ const SupportConversations = () => {
           </CardContent>
         </Card>
 
-        {/* Chat Messages */}
         <div className="md:col-span-2">
           <Card className="bg-slate-800 border-slate-700 h-full">
             <CardHeader>

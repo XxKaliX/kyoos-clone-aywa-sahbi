@@ -152,11 +152,11 @@ const UserSupportChat = () => {
           <CardTitle className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4" />
-              {t('support_chat_title')}
+              دردشة الدعم الفني
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-xs text-green-400">{t('online_support')}</span>
+              <span className="text-xs text-green-400">متصل</span>
               {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
             </div>
           </CardTitle>
@@ -168,7 +168,7 @@ const UserSupportChat = () => {
               <div className="space-y-3">
                 {messages.length === 0 && (
                   <div className="text-center text-gray-400 text-sm">
-                    {t('chat_with_support')}
+                    تحدث مع فريق الدعم
                   </div>
                 )}
                 {messages.map((message) => (
@@ -199,7 +199,7 @@ const UserSupportChat = () => {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder={t('type_message')}
+                  placeholder="اكتب رسالتك..."
                   className="flex-1 text-sm"
                   disabled={loading}
                 />

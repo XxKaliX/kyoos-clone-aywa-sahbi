@@ -102,7 +102,7 @@ const SupportChat = () => {
 
       setNewMessage('');
       await loadMessages(selectedTicket);
-      await loadTickets(); // Refresh to update timestamps
+      await loadTickets();
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -126,7 +126,6 @@ const SupportChat = () => {
       <h2 className="text-2xl font-bold">الدعم الفني</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[600px]">
-        {/* Tickets List */}
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
             <CardTitle>التذاكر</CardTitle>
@@ -165,7 +164,6 @@ const SupportChat = () => {
           </CardContent>
         </Card>
 
-        {/* Chat Messages */}
         <div className="md:col-span-2">
           <Card className="bg-slate-800 border-slate-700 h-full">
             <CardHeader>
