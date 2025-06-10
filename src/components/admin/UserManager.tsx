@@ -11,6 +11,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Edit, Trash2, UserPlus } from 'lucide-react';
 
+interface ProfileWithRole {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  created_at: string;
+  user_roles: Array<{ role: string }> | null;
+}
+
 const UserManager = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isEditing, setIsEditing] = useState<string | null>(null);
@@ -34,7 +42,7 @@ const UserManager = () => {
 
       if (error) throw error;
 
-      const userList: User[] = profiles?.map(profile => ({
+      const userList: User[] = (profiles as ProfileWithRole[])?.map(profile => ({
         id: profile.id,
         email: profile.email || '',
         name: profile.full_name || 'مستخدم',
