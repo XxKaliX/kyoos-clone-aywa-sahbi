@@ -16,7 +16,7 @@ export const useAuth = () => {
 // Owner account data
 const OWNER_DATA = {
   id: 'owner-default-id',
-  email: 'Owner@Kali.com',
+  email: 'Owner@Kali',
   name: 'Owner@Kali',
   role: 'owner' as const,
   isVerified: true,
@@ -105,7 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     // Check for owner credentials
-    if (email === 'Owner@Kali.com' && password === 'Owner@Kali') {
+    if (email === 'Owner@Kali' && password === 'OwnerKali123') {
       setUser(OWNER_DATA);
       setIsLoading(false);
       return { success: true, user: OWNER_DATA };
@@ -158,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    if (user?.email === 'Owner@Kali.com') {
+    if (user?.email === 'Owner@Kali') {
       // For owner, just clear local state
       setUser(null);
     } else {
