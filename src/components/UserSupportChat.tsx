@@ -16,9 +16,6 @@ interface Message {
   created_at: string;
   is_admin: boolean;
   user_id: string;
-  profiles?: {
-    full_name: string;
-  } | null;
 }
 
 interface Ticket {
@@ -90,10 +87,7 @@ const UserSupportChat = () => {
     try {
       const { data, error } = await supabase
         .from('support_messages')
-        .select(`
-          *,
-          profiles(full_name)
-        `)
+        .select('*')
         .eq('ticket_id', ticketId)
         .order('created_at', { ascending: true });
 
@@ -190,7 +184,7 @@ const UserSupportChat = () => {
                       }`}
                     >
                       <div className="text-xs opacity-70 mb-1">
-                        {message.profiles?.full_name || user.name} - {new Date(message.created_at).toLocaleString(language)}
+                        {message.is_admin ? 'الدعم الفني' : user.name} - {new Date(message.created_at).toLocaleString(language)}
                       </div>
                       <div>{message.message}</div>
                     </div>

@@ -16,9 +16,6 @@ interface Message {
   is_admin: boolean;
   user_id: string;
   ticket_id: string;
-  profiles?: {
-    full_name: string;
-  } | null;
 }
 
 interface Conversation {
@@ -28,9 +25,6 @@ interface Conversation {
   created_at: string;
   updated_at: string;
   user_id: string;
-  profiles?: {
-    full_name: string;
-  } | null;
   lastMessage?: string;
 }
 
@@ -57,10 +51,7 @@ const SupportConversations = () => {
     try {
       const { data, error } = await supabase
         .from('support_tickets')
-        .select(`
-          *,
-          profiles(full_name)
-        `)
+        .select('*')
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
@@ -97,10 +88,7 @@ const SupportConversations = () => {
     try {
       const { data, error } = await supabase
         .from('support_messages')
-        .select(`
-          *,
-          profiles(full_name)
-        `)
+        .select('*')
         .eq('ticket_id', ticketId)
         .order('created_at', { ascending: true });
 
@@ -181,7 +169,7 @@ const SupportConversations = () => {
                   >
                     <div className="font-medium">{conversation.title}</div>
                     <div className="text-sm text-gray-400">
-                      {conversation.profiles?.full_name || 'مستخدم غير معروف'}
+                      معرف المستخدم: {conversation.user_id.substring(0, 8)}...
                     </div>
                     <div className="text-xs text-gray-500 mt-1 truncate">
                       {conversation.lastMessage}
@@ -223,7 +211,7 @@ const SupportConversations = () => {
                         }`}
                       >
                         <div className="text-xs opacity-70 mb-1">
-                          {message.profiles?.full_name || 'مستخدم غير معروف'} - {new Date(message.created_at).toLocaleString('ar')}
+                          {message.is_admin ? 'الدعم الفني' : 'المستخدم'} - {new Date(message.created_at).toLocaleString('ar')}
                         </div>
                         <div>{message.message}</div>
                       </div>
