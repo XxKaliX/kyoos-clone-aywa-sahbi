@@ -11,12 +11,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Edit, Trash2, UserPlus } from 'lucide-react';
 
-interface ProfileWithRole {
+interface ProfileData {
   id: string;
   email: string | null;
   full_name: string | null;
   created_at: string;
-  user_roles: Array<{ role: string }> | null;
+}
+
+interface UserRoleData {
+  role: string;
 }
 
 const UserManager = () => {
@@ -32,27 +35,50 @@ const UserManager = () => {
 
   const loadUsers = async () => {
     try {
-      // Load profiles with roles
-      const { data: profiles, error } = await supabase
+      // Load profiles first
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles(role)
-        `);
+        .select('*');
 
-      if (error) throw error;
+      if (profilesError) throw profilesError;
 
-      const userList: User[] = (profiles as ProfileWithRole[])?.map(profile => ({
-        id: profile.id,
-        email: profile.email || '',
-        name: profile.full_name || 'مستخدم',
-        role: profile.user_roles?.[0]?.role || 'user',
-        isVerified: true,
-        subscriptionLevel: null,
-        subscriptionExpiry: null,
-        createdAt: profile.created_at,
-        permissions: []
-      })) || [];
+      // Load user roles separately
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*');
+
+      if (rolesError) throw rolesError;
+
+      // Combine the data
+      const userList: User[] = (profiles as ProfileData[])?.map(profile => {
+        const roleData = (userRoles as UserRoleData[] & { user_id: string }[])?.find(
+          role => role.user_id === profile.id
+        );
+        
+        // Type guard to ensure role is valid
+        const mapRole = (dbRole: string | undefined): User['role'] => {
+          switch (dbRole) {
+            case 'owner': return 'owner';
+            case 'superadmin': return 'superadmin';
+            case 'admin': return 'admin';
+            case 'support': return 'support';
+            case 'user': return 'user';
+            default: return 'user';
+          }
+        };
+
+        return {
+          id: profile.id,
+          email: profile.email || '',
+          name: profile.full_name || 'مستخدم',
+          role: mapRole(roleData?.role),
+          isVerified: true,
+          subscriptionLevel: null,
+          subscriptionExpiry: null,
+          createdAt: profile.created_at,
+          permissions: []
+        };
+      }) || [];
 
       setUsers(userList);
     } catch (error) {
@@ -280,7 +306,7 @@ const UserManager = () => {
                       <Label>الدور</Label>
                       <Select 
                         value={editingUser.role || 'user'}
-                        onValueChange={(value) => setEditingUser({...editingUser, role: value as any})}
+                        onValueChange={(value) => setEditingUser({...editingUser, role: value as User['role']})}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -297,7 +323,7 @@ const UserManager = () => {
                       <Label>مستوى الاشتراك</Label>
                       <Select 
                         value={editingUser.subscriptionLevel || 'null'}
-                        onValueChange={(value) => setEditingUser({...editingUser, subscriptionLevel: value === 'null' ? null : value as any})}
+                        onValueChange={(value) => setEditingUser({...editingUser, subscriptionLevel: value === 'null' ? null : value as User['subscriptionLevel']})}
                       >
                         <SelectTrigger>
                           <SelectValue />
