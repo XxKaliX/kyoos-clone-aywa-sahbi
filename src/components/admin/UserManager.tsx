@@ -24,7 +24,7 @@ const UserManager = () => {
 
   const loadUsers = async () => {
     try {
-      // Load profiles with roles - fixed query structure
+      // Load profiles with roles - corrected data access
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select(`
@@ -38,7 +38,7 @@ const UserManager = () => {
         id: profile.id,
         email: profile.email || '',
         name: profile.full_name || 'مستخدم',
-        role: profile.user_roles?.[0]?.role || 'user',
+        role: Array.isArray(profile.user_roles) ? profile.user_roles[0]?.role || 'user' : 'user',
         isVerified: true,
         subscriptionLevel: null,
         subscriptionExpiry: null,
@@ -334,6 +334,153 @@ const UserManager = () => {
       </div>
     </div>
   );
+
+  function handleEditUser(user: User) {
+    setIsEditing(user.id);
+    setEditingUser(user);
+  }
+
+  async function handleSaveUser() {
+    if (!isEditing || !editingUser) return;
+    
+    try {
+      // Update profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editingUser.name,
+          email: editingUser.email
+        })
+        .eq('id', isEditing);
+
+      if (profileError) throw profileError;
+
+      // Update role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .update({ role: editingUser.role })
+        .eq('user_id', isEditing);
+
+      if (roleError) throw roleError;
+
+      await loadUsers();
+      setIsEditing(null);
+      setEditingUser({});
+      
+      toast({
+        title: "تم حفظ المستخدم بنجاح",
+        description: "تم تحديث بيانات المستخدم"
+      });
+    } catch (error) {
+      console.error('Error saving user:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في حفظ المستخدم",
+        variant: "destructive"
+      });
+    }
+  }
+
+  async function handleDeleteUser(id: string) {
+    if (id === currentUser?.id) {
+      toast({
+        title: "خطأ",
+        description: "لا يمكنك حذف حسابك الخاص",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      // Delete user role first
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', id);
+
+      // Delete profile
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await loadUsers();
+      
+      toast({
+        title: "تم حذف المستخدم",
+        description: "تم حذف المستخدم بنجاح"
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في حذف المستخدم",
+        variant: "destructive"
+      });
+    }
+  }
+
+  async function handleAddAdmin() {
+    try {
+      const newAdminId = crypto.randomUUID();
+      
+      // Create profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: newAdminId,
+          email: 'admin@example.com',
+          full_name: 'مدير جديد'
+        });
+
+      if (profileError) throw profileError;
+
+      // Create role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: newAdminId,
+          role: 'admin'
+        });
+
+      if (roleError) throw roleError;
+
+      await loadUsers();
+      setIsEditing(newAdminId);
+      setEditingUser({
+        id: newAdminId,
+        email: 'admin@example.com',
+        name: 'مدير جديد',
+        role: 'admin'
+      });
+    } catch (error) {
+      console.error('Error adding admin:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في إضافة المدير",
+        variant: "destructive"
+      });
+    }
+  }
+
+  function getRoleText(role: string) {
+    switch (role) {
+      case 'owner': return 'المالك';
+      case 'superadmin': return 'مدير عام';
+      case 'admin': return 'مدير';
+      case 'support': return 'دعم فني';
+      case 'user': return 'مستخدم';
+      default: return role;
+    }
+  }
+
+  function canEditUser(userToEdit: User) {
+    if (currentUser?.role === 'owner') return true;
+    if (currentUser?.role === 'superadmin' && userToEdit.role !== 'owner') return true;
+    return false;
+  }
 };
 
 export default UserManager;

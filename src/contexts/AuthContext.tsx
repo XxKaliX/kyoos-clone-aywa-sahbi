@@ -80,7 +80,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             case 'superadmin': return 'superadmin';
             case 'admin': return 'admin';
             case 'support': return 'support';
-            case 'moderator': return 'admin'; // Map moderator to admin
             default: return 'user';
           }
         };
