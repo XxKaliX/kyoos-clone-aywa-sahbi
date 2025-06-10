@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { User } from '@/types/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Edit, Trash2, UserPlus } from 'lucide-react';
 
 const UserManager = () => {
@@ -18,15 +19,42 @@ const UserManager = () => {
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
-    const savedUsers = localStorage.getItem('users');
-    if (savedUsers) {
-      setUsers(JSON.parse(savedUsers));
-    }
+    loadUsers();
   }, []);
 
-  const saveUsers = (updatedUsers: User[]) => {
-    setUsers(updatedUsers);
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
+  const loadUsers = async () => {
+    try {
+      // Load profiles with roles
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles(role)
+        `);
+
+      if (error) throw error;
+
+      const userList: User[] = profiles?.map(profile => ({
+        id: profile.id,
+        email: profile.email || '',
+        name: profile.full_name || 'مستخدم',
+        role: profile.user_roles?.[0]?.role || 'user',
+        isVerified: true,
+        subscriptionLevel: null,
+        subscriptionExpiry: null,
+        createdAt: profile.created_at,
+        permissions: []
+      })) || [];
+
+      setUsers(userList);
+    } catch (error) {
+      console.error('Error loading users:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في تحميل المستخدمين",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleEditUser = (user: User) => {
@@ -34,22 +62,48 @@ const UserManager = () => {
     setEditingUser(user);
   };
 
-  const handleSaveUser = () => {
+  const handleSaveUser = async () => {
     if (!isEditing || !editingUser) return;
     
-    const updatedUsers = users.map(user => 
-      user.id === isEditing ? { ...user, ...editingUser } : user
-    );
-    saveUsers(updatedUsers);
-    setIsEditing(null);
-    setEditingUser({});
-    toast({
-      title: "تم حفظ المستخدم بنجاح",
-      description: "تم تحديث بيانات المستخدم"
-    });
+    try {
+      // Update profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editingUser.name,
+          email: editingUser.email
+        })
+        .eq('id', isEditing);
+
+      if (profileError) throw profileError;
+
+      // Update role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .update({ role: editingUser.role })
+        .eq('user_id', isEditing);
+
+      if (roleError) throw roleError;
+
+      await loadUsers();
+      setIsEditing(null);
+      setEditingUser({});
+      
+      toast({
+        title: "تم حفظ المستخدم بنجاح",
+        description: "تم تحديث بيانات المستخدم"
+      });
+    } catch (error) {
+      console.error('Error saving user:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في حفظ المستخدم",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDeleteUser = (id: string) => {
+  const handleDeleteUser = async (id: string) => {
     if (id === currentUser?.id) {
       toast({
         title: "خطأ",
@@ -59,29 +113,78 @@ const UserManager = () => {
       return;
     }
     
-    const updatedUsers = users.filter(user => user.id !== id);
-    saveUsers(updatedUsers);
-    toast({
-      title: "تم حذف المستخدم",
-      description: "تم حذف المستخدم بنجاح"
-    });
+    try {
+      // Delete user role first
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', id);
+
+      // Delete profile
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await loadUsers();
+      
+      toast({
+        title: "تم حذف المستخدم",
+        description: "تم حذف المستخدم بنجاح"
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في حذف المستخدم",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleAddAdmin = () => {
-    const newAdmin: User = {
-      id: Date.now().toString(),
-      email: 'admin@example.com',
-      name: 'مدير جديد',
-      role: 'admin',
-      isVerified: true,
-      subscriptionLevel: null,
-      subscriptionExpiry: null,
-      createdAt: new Date().toISOString(),
-      permissions: []
-    };
-    saveUsers([...users, newAdmin]);
-    setIsEditing(newAdmin.id);
-    setEditingUser(newAdmin);
+  const handleAddAdmin = async () => {
+    try {
+      const newAdminId = crypto.randomUUID();
+      
+      // Create profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: newAdminId,
+          email: 'admin@example.com',
+          full_name: 'مدير جديد'
+        });
+
+      if (profileError) throw profileError;
+
+      // Create role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: newAdminId,
+          role: 'admin'
+        });
+
+      if (roleError) throw roleError;
+
+      await loadUsers();
+      setIsEditing(newAdminId);
+      setEditingUser({
+        id: newAdminId,
+        email: 'admin@example.com',
+        name: 'مدير جديد',
+        role: 'admin'
+      });
+    } catch (error) {
+      console.error('Error adding admin:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في إضافة المدير",
+        variant: "destructive"
+      });
+    }
   };
 
   const getRoleText = (role: string) => {
