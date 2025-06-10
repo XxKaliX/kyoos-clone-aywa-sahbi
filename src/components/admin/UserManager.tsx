@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,7 @@ const UserManager = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<Partial<User>>({});
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
@@ -35,19 +37,32 @@ const UserManager = () => {
 
   const loadUsers = async () => {
     try {
+      setIsLoading(true);
+      console.log('Loading users...');
+      
       // Load profiles first
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
 
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('Profiles error:', profilesError);
+        throw profilesError;
+      }
+
+      console.log('Loaded profiles:', profiles);
 
       // Load user roles separately
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('*');
 
-      if (rolesError) throw rolesError;
+      if (rolesError) {
+        console.error('Roles error:', rolesError);
+        throw rolesError;
+      }
+
+      console.log('Loaded roles:', userRoles);
 
       // Combine the data
       const userList: User[] = (profiles as ProfileData[])?.map(profile => {
@@ -80,6 +95,7 @@ const UserManager = () => {
         };
       }) || [];
 
+      console.log('Final user list:', userList);
       setUsers(userList);
     } catch (error) {
       console.error('Error loading users:', error);
@@ -88,6 +104,8 @@ const UserManager = () => {
         description: "فشل في تحميل المستخدمين",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -100,6 +118,8 @@ const UserManager = () => {
     if (!isEditing || !editingUser) return;
     
     try {
+      console.log('Saving user:', editingUser);
+      
       // Update profile
       const { error: profileError } = await supabase
         .from('profiles')
@@ -109,7 +129,10 @@ const UserManager = () => {
         })
         .eq('id', isEditing);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw profileError;
+      }
 
       // Update role
       const { error: roleError } = await supabase
@@ -117,7 +140,10 @@ const UserManager = () => {
         .update({ role: editingUser.role })
         .eq('user_id', isEditing);
 
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error('Role update error:', roleError);
+        throw roleError;
+      }
 
       await loadUsers();
       setIsEditing(null);
@@ -148,6 +174,8 @@ const UserManager = () => {
     }
     
     try {
+      console.log('Deleting user:', id);
+      
       // Delete user role first
       await supabase
         .from('user_roles')
@@ -182,6 +210,8 @@ const UserManager = () => {
     try {
       const newAdminId = crypto.randomUUID();
       
+      console.log('Adding new admin:', newAdminId);
+      
       // Create profile
       const { error: profileError } = await supabase
         .from('profiles')
@@ -191,7 +221,10 @@ const UserManager = () => {
           full_name: 'مدير جديد'
         });
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        throw profileError;
+      }
 
       // Create role
       const { error: roleError } = await supabase
@@ -201,7 +234,10 @@ const UserManager = () => {
           role: 'admin'
         });
 
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error('Role creation error:', roleError);
+        throw roleError;
+      }
 
       await loadUsers();
       setIsEditing(newAdminId);
@@ -210,6 +246,11 @@ const UserManager = () => {
         email: 'admin@example.com',
         name: 'مدير جديد',
         role: 'admin'
+      });
+
+      toast({
+        title: "تم إضافة المدير",
+        description: "تم إضافة مدير جديد بنجاح"
       });
     } catch (error) {
       console.error('Error adding admin:', error);
@@ -238,6 +279,14 @@ const UserManager = () => {
     return false;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-white">جاري تحميل المستخدمين...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -251,120 +300,128 @@ const UserManager = () => {
       </div>
 
       <div className="grid gap-4">
-        {users.map((user) => (
-          <Card key={user.id} className="bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="flex justify-between items-center">
-                <div>
-                  <span>{user.name}</span>
-                  <span className="text-sm text-gray-400 ml-2">({getRoleText(user.role)})</span>
-                </div>
-                {canEditUser(user) && (
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleEditUser(user)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    {user.role !== 'owner' && (
+        {users.length === 0 ? (
+          <Card className="bg-slate-800 border-slate-700">
+            <CardContent className="p-6 text-center text-gray-400">
+              لا توجد مستخدمين
+            </CardContent>
+          </Card>
+        ) : (
+          users.map((user) => (
+            <Card key={user.id} className="bg-slate-800 border-slate-700">
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  <div>
+                    <span>{user.name}</span>
+                    <span className="text-sm text-gray-400 ml-2">({getRoleText(user.role)})</span>
+                  </div>
+                  {canEditUser(user) && (
+                    <div className="flex gap-2">
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleDeleteUser(user.id)}
+                        onClick={() => handleEditUser(user)}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Edit className="w-4 h-4" />
                       </Button>
+                      {user.role !== 'owner' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDeleteUser(user.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isEditing === user.id ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>الاسم</Label>
+                        <Input 
+                          value={editingUser.name || ''}
+                          onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label>البريد الإلكتروني</Label>
+                        <Input 
+                          type="email"
+                          value={editingUser.email || ''}
+                          onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>الدور</Label>
+                        <Select 
+                          value={editingUser.role || 'user'}
+                          onValueChange={(value) => setEditingUser({...editingUser, role: value as User['role']})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="user">مستخدم</SelectItem>
+                            <SelectItem value="support">دعم فني</SelectItem>
+                            <SelectItem value="admin">مدير</SelectItem>
+                            {currentUser?.role === 'owner' && <SelectItem value="superadmin">مدير عام</SelectItem>}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>مستوى الاشتراك</Label>
+                        <Select 
+                          value={editingUser.subscriptionLevel || 'null'}
+                          onValueChange={(value) => setEditingUser({...editingUser, subscriptionLevel: value === 'null' ? null : value as User['subscriptionLevel']})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="null">بدون اشتراك</SelectItem>
+                            <SelectItem value="basic">أساسي</SelectItem>
+                            <SelectItem value="gold">ذهبي</SelectItem>
+                            <SelectItem value="diamond">الماسي</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <Label>تاريخ انتهاء الاشتراك</Label>
+                      <Input 
+                        type="date"
+                        value={editingUser.subscriptionExpiry?.split('T')[0] || ''}
+                        onChange={(e) => setEditingUser({...editingUser, subscriptionExpiry: e.target.value ? new Date(e.target.value).toISOString() : null})}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={handleSaveUser}>حفظ</Button>
+                      <Button variant="outline" onClick={() => setIsEditing(null)}>إلغاء</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p>البريد الإلكتروني: {user.email}</p>
+                    <p>ID: {user.id}</p>
+                    <p>تاريخ الإنشاء: {new Date(user.createdAt).toLocaleDateString('ar')}</p>
+                    <p>مفعل: {user.isVerified ? 'نعم' : 'لا'}</p>
+                    <p>الاشتراك: {user.subscriptionLevel || 'بدون اشتراك'}</p>
+                    {user.subscriptionExpiry && (
+                      <p>ينتهي في: {new Date(user.subscriptionExpiry).toLocaleDateString('ar')}</p>
                     )}
                   </div>
                 )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isEditing === user.id ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>الاسم</Label>
-                      <Input 
-                        value={editingUser.name || ''}
-                        onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <Label>البريد الإلكتروني</Label>
-                      <Input 
-                        type="email"
-                        value={editingUser.email || ''}
-                        onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>الدور</Label>
-                      <Select 
-                        value={editingUser.role || 'user'}
-                        onValueChange={(value) => setEditingUser({...editingUser, role: value as User['role']})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="user">مستخدم</SelectItem>
-                          <SelectItem value="support">دعم فني</SelectItem>
-                          <SelectItem value="admin">مدير</SelectItem>
-                          {currentUser?.role === 'owner' && <SelectItem value="superadmin">مدير عام</SelectItem>}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>مستوى الاشتراك</Label>
-                      <Select 
-                        value={editingUser.subscriptionLevel || 'null'}
-                        onValueChange={(value) => setEditingUser({...editingUser, subscriptionLevel: value === 'null' ? null : value as User['subscriptionLevel']})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="null">بدون اشتراك</SelectItem>
-                          <SelectItem value="basic">أساسي</SelectItem>
-                          <SelectItem value="gold">ذهبي</SelectItem>
-                          <SelectItem value="diamond">الماسي</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div>
-                    <Label>تاريخ انتهاء الاشتراك</Label>
-                    <Input 
-                      type="date"
-                      value={editingUser.subscriptionExpiry?.split('T')[0] || ''}
-                      onChange={(e) => setEditingUser({...editingUser, subscriptionExpiry: e.target.value ? new Date(e.target.value).toISOString() : null})}
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleSaveUser}>حفظ</Button>
-                    <Button variant="outline" onClick={() => setIsEditing(null)}>إلغاء</Button>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <p>البريد الإلكتروني: {user.email}</p>
-                  <p>ID: {user.id}</p>
-                  <p>تاريخ الإنشاء: {new Date(user.createdAt).toLocaleDateString('ar')}</p>
-                  <p>مفعل: {user.isVerified ? 'نعم' : 'لا'}</p>
-                  <p>الاشتراك: {user.subscriptionLevel || 'بدون اشتراك'}</p>
-                  {user.subscriptionExpiry && (
-                    <p>ينتهي في: {new Date(user.subscriptionExpiry).toLocaleDateString('ar')}</p>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );

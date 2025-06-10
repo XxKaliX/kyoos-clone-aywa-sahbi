@@ -32,6 +32,7 @@ const SupportChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isLoadingTickets, setIsLoadingTickets] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -47,12 +48,20 @@ const SupportChat = () => {
 
   const loadTickets = async () => {
     try {
+      setIsLoadingTickets(true);
+      console.log('Loading tickets...');
+      
       const { data, error } = await supabase
         .from('support_tickets')
         .select('*')
         .order('updated_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Tickets error:', error);
+        throw error;
+      }
+      
+      console.log('Loaded tickets:', data);
       setTickets(data || []);
     } catch (error) {
       console.error('Error loading tickets:', error);
@@ -61,18 +70,27 @@ const SupportChat = () => {
         description: "فشل في تحميل التذاكر",
         variant: "destructive",
       });
+    } finally {
+      setIsLoadingTickets(false);
     }
   };
 
   const loadMessages = async (ticketId: string) => {
     try {
+      console.log('Loading messages for ticket:', ticketId);
+      
       const { data, error } = await supabase
         .from('support_messages')
         .select('*')
         .eq('ticket_id', ticketId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Messages error:', error);
+        throw error;
+      }
+      
+      console.log('Loaded messages:', data);
       setMessages(data || []);
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -89,6 +107,8 @@ const SupportChat = () => {
 
     setLoading(true);
     try {
+      console.log('Sending message:', newMessage, 'to ticket:', selectedTicket);
+      
       const { error } = await supabase
         .from('support_messages')
         .insert({
@@ -98,11 +118,19 @@ const SupportChat = () => {
           is_admin: true
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Send message error:', error);
+        throw error;
+      }
 
       setNewMessage('');
       await loadMessages(selectedTicket);
       await loadTickets();
+      
+      toast({
+        title: "تم إرسال الرسالة",
+        description: "تم إرسال الرسالة بنجاح"
+      });
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -133,32 +161,38 @@ const SupportChat = () => {
           <CardContent className="p-0">
             <ScrollArea className="h-[500px]">
               <div className="space-y-2 p-4">
-                {tickets.map((ticket) => (
-                  <div
-                    key={ticket.id}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                      selectedTicket === ticket.id
-                        ? 'bg-blue-600'
-                        : 'bg-slate-700 hover:bg-slate-600'
-                    }`}
-                    onClick={() => setSelectedTicket(ticket.id)}
-                  >
-                    <div className="font-medium">{ticket.title}</div>
-                    <div className="text-sm text-gray-400">
-                      معرف المستخدم: {ticket.user_id.substring(0, 8)}...
+                {isLoadingTickets ? (
+                  <div className="text-center text-gray-400">جاري تحميل التذاكر...</div>
+                ) : tickets.length === 0 ? (
+                  <div className="text-center text-gray-400">لا توجد تذاكر</div>
+                ) : (
+                  tickets.map((ticket) => (
+                    <div
+                      key={ticket.id}
+                      className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                        selectedTicket === ticket.id
+                          ? 'bg-blue-600'
+                          : 'bg-slate-700 hover:bg-slate-600'
+                      }`}
+                      onClick={() => setSelectedTicket(ticket.id)}
+                    >
+                      <div className="font-medium">{ticket.title}</div>
+                      <div className="text-sm text-gray-400">
+                        معرف المستخدم: {ticket.user_id.substring(0, 8)}...
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {new Date(ticket.created_at).toLocaleString('ar')}
+                      </div>
+                      <div className={`text-xs px-2 py-1 rounded mt-1 inline-block ${
+                        ticket.status === 'open' ? 'bg-green-600' : 
+                        ticket.status === 'in_progress' ? 'bg-yellow-600' : 'bg-red-600'
+                      }`}>
+                        {ticket.status === 'open' ? 'مفتوح' : 
+                         ticket.status === 'in_progress' ? 'قيد المعالجة' : 'مغلق'}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(ticket.created_at).toLocaleString('ar')}
-                    </div>
-                    <div className={`text-xs px-2 py-1 rounded mt-1 inline-block ${
-                      ticket.status === 'open' ? 'bg-green-600' : 
-                      ticket.status === 'in_progress' ? 'bg-yellow-600' : 'bg-red-600'
-                    }`}>
-                      {ticket.status === 'open' ? 'مفتوح' : 
-                       ticket.status === 'in_progress' ? 'قيد المعالجة' : 'مغلق'}
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </ScrollArea>
           </CardContent>
@@ -177,25 +211,29 @@ const SupportChat = () => {
             <CardContent className="p-0 h-[500px] flex flex-col">
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
-                  {messages.map((message) => (
-                    <div 
-                      key={message.id}
-                      className={`flex ${message.is_admin ? 'justify-end' : 'justify-start'}`}
-                    >
+                  {messages.length === 0 && selectedTicket ? (
+                    <div className="text-center text-gray-400">لا توجد رسائل في هذه التذكرة</div>
+                  ) : (
+                    messages.map((message) => (
                       <div 
-                        className={`max-w-xs p-3 rounded-lg ${
-                          message.is_admin 
-                            ? 'bg-blue-600 text-white' 
-                            : 'bg-gray-700 text-white'
-                        }`}
+                        key={message.id}
+                        className={`flex ${message.is_admin ? 'justify-end' : 'justify-start'}`}
                       >
-                        <div className="text-xs opacity-70 mb-1">
-                          {message.is_admin ? 'الدعم الفني' : 'المستخدم'} - {new Date(message.created_at).toLocaleString('ar')}
+                        <div 
+                          className={`max-w-xs p-3 rounded-lg ${
+                            message.is_admin 
+                              ? 'bg-blue-600 text-white' 
+                              : 'bg-gray-700 text-white'
+                          }`}
+                        >
+                          <div className="text-xs opacity-70 mb-1">
+                            {message.is_admin ? 'الدعم الفني' : 'المستخدم'} - {new Date(message.created_at).toLocaleString('ar')}
+                          </div>
+                          <div>{message.message}</div>
                         </div>
-                        <div>{message.message}</div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </ScrollArea>
 
@@ -210,7 +248,7 @@ const SupportChat = () => {
                       className="flex-1"
                       disabled={loading}
                     />
-                    <Button onClick={handleSendMessage} disabled={loading}>
+                    <Button onClick={handleSendMessage} disabled={loading || !newMessage.trim()}>
                       <Send className="w-4 h-4" />
                     </Button>
                   </div>

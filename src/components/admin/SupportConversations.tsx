@@ -34,6 +34,7 @@ const SupportConversations = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isLoadingConversations, setIsLoadingConversations] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -49,12 +50,20 @@ const SupportConversations = () => {
 
   const loadConversations = async () => {
     try {
+      setIsLoadingConversations(true);
+      console.log('Loading conversations...');
+      
       const { data, error } = await supabase
         .from('support_tickets')
         .select('*')
         .order('updated_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Conversations error:', error);
+        throw error;
+      }
+
+      console.log('Loaded conversations:', data);
 
       const conversationsWithLastMessage = await Promise.all(
         (data || []).map(async (conv) => {
@@ -72,6 +81,7 @@ const SupportConversations = () => {
         })
       );
 
+      console.log('Conversations with last messages:', conversationsWithLastMessage);
       setConversations(conversationsWithLastMessage);
     } catch (error) {
       console.error('Error loading conversations:', error);
@@ -80,18 +90,27 @@ const SupportConversations = () => {
         description: "فشل في تحميل المحادثات",
         variant: "destructive",
       });
+    } finally {
+      setIsLoadingConversations(false);
     }
   };
 
   const loadMessages = async (ticketId: string) => {
     try {
+      console.log('Loading messages for ticket:', ticketId);
+      
       const { data, error } = await supabase
         .from('support_messages')
         .select('*')
         .eq('ticket_id', ticketId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Messages error:', error);
+        throw error;
+      }
+      
+      console.log('Loaded messages:', data);
       setMessages(data || []);
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -108,6 +127,8 @@ const SupportConversations = () => {
 
     setLoading(true);
     try {
+      console.log('Sending message:', newMessage, 'to ticket:', selectedConversation);
+      
       const { error } = await supabase
         .from('support_messages')
         .insert({
@@ -117,11 +138,19 @@ const SupportConversations = () => {
           is_admin: true
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Send message error:', error);
+        throw error;
+      }
 
       setNewMessage('');
       await loadMessages(selectedConversation);
       await loadConversations();
+      
+      toast({
+        title: "تم إرسال الرسالة",
+        description: "تم إرسال الرسالة بنجاح"
+      });
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -155,28 +184,34 @@ const SupportConversations = () => {
           <CardContent className="p-0">
             <ScrollArea className="h-[500px]">
               <div className="space-y-2 p-4">
-                {conversations.map((conversation) => (
-                  <div
-                    key={conversation.id}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                      selectedConversation === conversation.id
-                        ? 'bg-blue-600'
-                        : 'bg-slate-700 hover:bg-slate-600'
-                    }`}
-                    onClick={() => setSelectedConversation(conversation.id)}
-                  >
-                    <div className="font-medium">{conversation.title}</div>
-                    <div className="text-sm text-gray-400">
-                      معرف المستخدم: {conversation.user_id.substring(0, 8)}...
+                {isLoadingConversations ? (
+                  <div className="text-center text-gray-400">جاري تحميل المحادثات...</div>
+                ) : conversations.length === 0 ? (
+                  <div className="text-center text-gray-400">لا توجد محادثات</div>
+                ) : (
+                  conversations.map((conversation) => (
+                    <div
+                      key={conversation.id}
+                      className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                        selectedConversation === conversation.id
+                          ? 'bg-blue-600'
+                          : 'bg-slate-700 hover:bg-slate-600'
+                      }`}
+                      onClick={() => setSelectedConversation(conversation.id)}
+                    >
+                      <div className="font-medium">{conversation.title}</div>
+                      <div className="text-sm text-gray-400">
+                        معرف المستخدم: {conversation.user_id.substring(0, 8)}...
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1 truncate">
+                        {conversation.lastMessage}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {new Date(conversation.updated_at).toLocaleString('ar')}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1 truncate">
-                      {conversation.lastMessage}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(conversation.updated_at).toLocaleString('ar')}
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </ScrollArea>
           </CardContent>
@@ -195,25 +230,29 @@ const SupportConversations = () => {
             <CardContent className="p-0 h-[500px] flex flex-col">
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
-                  {messages.map((message) => (
-                    <div 
-                      key={message.id}
-                      className={`flex ${message.is_admin ? 'justify-end' : 'justify-start'}`}
-                    >
+                  {messages.length === 0 && selectedConversation ? (
+                    <div className="text-center text-gray-400">لا توجد رسائل في هذه المحادثة</div>
+                  ) : (
+                    messages.map((message) => (
                       <div 
-                        className={`max-w-xs p-3 rounded-lg ${
-                          message.is_admin 
-                            ? 'bg-blue-600 text-white' 
-                            : 'bg-gray-700 text-white'
-                        }`}
+                        key={message.id}
+                        className={`flex ${message.is_admin ? 'justify-end' : 'justify-start'}`}
                       >
-                        <div className="text-xs opacity-70 mb-1">
-                          {message.is_admin ? 'الدعم الفني' : 'المستخدم'} - {new Date(message.created_at).toLocaleString('ar')}
+                        <div 
+                          className={`max-w-xs p-3 rounded-lg ${
+                            message.is_admin 
+                              ? 'bg-blue-600 text-white' 
+                              : 'bg-gray-700 text-white'
+                          }`}
+                        >
+                          <div className="text-xs opacity-70 mb-1">
+                            {message.is_admin ? 'الدعم الفني' : 'المستخدم'} - {new Date(message.created_at).toLocaleString('ar')}
+                          </div>
+                          <div>{message.message}</div>
                         </div>
-                        <div>{message.message}</div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </ScrollArea>
 
@@ -228,7 +267,7 @@ const SupportConversations = () => {
                       className="flex-1"
                       disabled={loading}
                     />
-                    <Button onClick={handleSendMessage} disabled={loading}>
+                    <Button onClick={handleSendMessage} disabled={loading || !newMessage.trim()}>
                       <Send className="w-4 h-4" />
                     </Button>
                   </div>

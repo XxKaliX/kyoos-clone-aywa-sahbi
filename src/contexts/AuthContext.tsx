@@ -33,9 +33,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Check for existing session
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await loadUserFromSupabase(session.user.id, session.user.email || '');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await loadUserFromSupabase(session.user.id, session.user.email || '');
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
       }
       setIsLoading(false);
     };
@@ -44,6 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session);
       if (session?.user) {
         await loadUserFromSupabase(session.user.id, session.user.email || '');
       } else {
@@ -58,19 +63,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserFromSupabase = async (userId: string, email: string) => {
     try {
+      console.log('Loading user from Supabase:', userId, email);
+      
       // Get user profile from database
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
+      if (profileError) {
+        console.error('Profile error:', profileError);
+        return;
+      }
+
       // Get user role
-      const { data: userRole } = await supabase
+      const { data: userRole, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
         .single();
+
+      if (roleError) {
+        console.error('Role error:', roleError);
+      }
 
       if (profile) {
         // Map database roles to our type system
@@ -84,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         };
 
-        setUser({
+        const userData = {
           id: userId,
           email: email,
           name: profile.full_name || 'المستخدم',
@@ -92,9 +108,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           isVerified: true,
           subscriptionLevel: null,
           subscriptionExpiry: null,
-          createdAt: new Date().toISOString(),
+          createdAt: profile.created_at || new Date().toISOString(),
           permissions: []
-        });
+        };
+
+        console.log('Setting user data:', userData);
+        setUser(userData);
       }
     } catch (error) {
       console.error('Error loading user from Supabase:', error);
@@ -102,10 +121,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = async (email: string, password: string): Promise<{ success: boolean; user?: User }> => {
+    console.log('Login attempt:', email);
     setIsLoading(true);
     
     // Check for owner credentials
     if (email === 'Owner@Kali' && password === 'OwnerKali123') {
+      console.log('Owner login successful');
       setUser(OWNER_DATA);
       setIsLoading(false);
       return { success: true, user: OWNER_DATA };
@@ -117,9 +138,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase login error:', error);
+        throw error;
+      }
 
       if (data.user) {
+        console.log('Supabase login successful:', data.user.id);
         await loadUserFromSupabase(data.user.id, data.user.email || '');
         setIsLoading(false);
         return { success: true, user: user };
@@ -148,6 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
 
+      console.log('Registration successful:', data);
       setIsLoading(false);
       return true;
     } catch (error) {
@@ -160,9 +186,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     if (user?.email === 'Owner@Kali') {
       // For owner, just clear local state
+      console.log('Owner logout');
       setUser(null);
     } else {
       // For Supabase users, sign out from Supabase
+      console.log('Supabase logout');
       await supabase.auth.signOut();
       setUser(null);
     }

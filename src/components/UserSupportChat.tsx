@@ -30,6 +30,7 @@ const UserSupportChat = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [currentTicket, setCurrentTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
   const { user } = useAuth();
   const { t, language } = useLanguage();
   const { toast } = useToast();
@@ -44,6 +45,9 @@ const UserSupportChat = () => {
     if (!user) return;
 
     try {
+      setIsInitializing(true);
+      console.log('Initializing ticket for user:', user.id);
+
       // Check for existing open ticket
       const { data: existingTickets, error } = await supabase
         .from('support_tickets')
@@ -52,7 +56,12 @@ const UserSupportChat = () => {
         .eq('status', 'open')
         .limit(1);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error checking existing tickets:', error);
+        throw error;
+      }
+
+      console.log('Existing tickets:', existingTickets);
 
       if (existingTickets && existingTickets.length > 0) {
         setCurrentTicket(existingTickets[0]);
@@ -70,7 +79,12 @@ const UserSupportChat = () => {
           .select()
           .single();
 
-        if (createError) throw createError;
+        if (createError) {
+          console.error('Error creating ticket:', createError);
+          throw createError;
+        }
+        
+        console.log('Created new ticket:', newTicket);
         setCurrentTicket(newTicket);
       }
     } catch (error) {
@@ -80,18 +94,27 @@ const UserSupportChat = () => {
         description: "فشل في تهيئة محادثة الدعم",
         variant: "destructive",
       });
+    } finally {
+      setIsInitializing(false);
     }
   };
 
   const loadMessages = async (ticketId: string) => {
     try {
+      console.log('Loading messages for ticket:', ticketId);
+      
       const { data, error } = await supabase
         .from('support_messages')
         .select('*')
         .eq('ticket_id', ticketId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading messages:', error);
+        throw error;
+      }
+      
+      console.log('Loaded messages:', data);
       setMessages(data || []);
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -108,6 +131,8 @@ const UserSupportChat = () => {
 
     setLoading(true);
     try {
+      console.log('Sending message:', newMessage, 'to ticket:', currentTicket.id);
+      
       const { error } = await supabase
         .from('support_messages')
         .insert({
@@ -117,10 +142,18 @@ const UserSupportChat = () => {
           is_admin: false
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error sending message:', error);
+        throw error;
+      }
 
       setNewMessage('');
       await loadMessages(currentTicket.id);
+      
+      toast({
+        title: "تم إرسال الرسالة",
+        description: "تم إرسال رسالتك بنجاح"
+      });
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -166,30 +199,35 @@ const UserSupportChat = () => {
           <CardContent className="p-0 h-80 flex flex-col">
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-3">
-                {messages.length === 0 && (
+                {isInitializing ? (
+                  <div className="text-center text-gray-400 text-sm">
+                    جاري تهيئة المحادثة...
+                  </div>
+                ) : messages.length === 0 ? (
                   <div className="text-center text-gray-400 text-sm">
                     تحدث مع فريق الدعم
                   </div>
-                )}
-                {messages.map((message) => (
-                  <div 
-                    key={message.id}
-                    className={`flex ${message.is_admin ? 'justify-start' : 'justify-end'}`}
-                  >
+                ) : (
+                  messages.map((message) => (
                     <div 
-                      className={`max-w-xs p-2 rounded-lg text-sm ${
-                        message.is_admin 
-                          ? 'bg-gray-700 text-white' 
-                          : 'bg-blue-600 text-white'
-                      }`}
+                      key={message.id}
+                      className={`flex ${message.is_admin ? 'justify-start' : 'justify-end'}`}
                     >
-                      <div className="text-xs opacity-70 mb-1">
-                        {message.is_admin ? 'الدعم الفني' : user.name} - {new Date(message.created_at).toLocaleString(language)}
+                      <div 
+                        className={`max-w-xs p-2 rounded-lg text-sm ${
+                          message.is_admin 
+                            ? 'bg-gray-700 text-white' 
+                            : 'bg-blue-600 text-white'
+                        }`}
+                      >
+                        <div className="text-xs opacity-70 mb-1">
+                          {message.is_admin ? 'الدعم الفني' : user.name} - {new Date(message.created_at).toLocaleString(language)}
+                        </div>
+                        <div>{message.message}</div>
                       </div>
-                      <div>{message.message}</div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </ScrollArea>
 
@@ -201,9 +239,13 @@ const UserSupportChat = () => {
                   onKeyPress={handleKeyPress}
                   placeholder="اكتب رسالتك..."
                   className="flex-1 text-sm"
-                  disabled={loading}
+                  disabled={loading || !currentTicket}
                 />
-                <Button onClick={handleSendMessage} size="sm" disabled={loading}>
+                <Button 
+                  onClick={handleSendMessage} 
+                  size="sm" 
+                  disabled={loading || !currentTicket || !newMessage.trim()}
+                >
                   <Send className="w-3 h-3" />
                 </Button>
               </div>
