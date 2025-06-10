@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +18,7 @@ interface ProfileData {
 }
 
 interface UserRoleData {
+  user_id: string;
   role: string;
 }
 
@@ -51,7 +51,7 @@ const UserManager = () => {
 
       // Combine the data
       const userList: User[] = (profiles as ProfileData[])?.map(profile => {
-        const roleData = (userRoles as UserRoleData[] & { user_id: string }[])?.find(
+        const roleData = (userRoles as UserRoleData[])?.find(
           role => role.user_id === profile.id
         );
         
