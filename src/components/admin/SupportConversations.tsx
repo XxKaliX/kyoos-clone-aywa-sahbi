@@ -18,7 +18,7 @@ interface Message {
   ticket_id: string;
   profiles?: {
     full_name: string;
-  };
+  } | null;
 }
 
 interface Conversation {
@@ -30,7 +30,7 @@ interface Conversation {
   user_id: string;
   profiles?: {
     full_name: string;
-  };
+  } | null;
   lastMessage?: string;
 }
 
@@ -59,7 +59,7 @@ const SupportConversations = () => {
         .from('support_tickets')
         .select(`
           *,
-          profiles!support_tickets_user_id_fkey(full_name)
+          profiles(full_name)
         `)
         .order('updated_at', { ascending: false });
 
@@ -99,7 +99,7 @@ const SupportConversations = () => {
         .from('support_messages')
         .select(`
           *,
-          profiles!support_messages_user_id_fkey(full_name)
+          profiles(full_name)
         `)
         .eq('ticket_id', ticketId)
         .order('created_at', { ascending: true });

@@ -18,7 +18,7 @@ interface Message {
   user_id: string;
   profiles?: {
     full_name: string;
-  };
+  } | null;
 }
 
 interface Ticket {
@@ -92,7 +92,7 @@ const UserSupportChat = () => {
         .from('support_messages')
         .select(`
           *,
-          profiles!support_messages_user_id_fkey(full_name)
+          profiles(full_name)
         `)
         .eq('ticket_id', ticketId)
         .order('created_at', { ascending: true });
